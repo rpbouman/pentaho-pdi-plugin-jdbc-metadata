@@ -531,6 +531,8 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     connectionFieldFormData.top = new FormAttachment(lastControl, margin);
     connectionField.setLayoutData(connectionFieldFormData);
 
+    lastControl = connectionField;
+
     //jdbc driver field
     Label jdbcDriverLabel = new Label(connectionComposite, SWT.RIGHT);
     jdbcDriverLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.driverField.Label")); 
