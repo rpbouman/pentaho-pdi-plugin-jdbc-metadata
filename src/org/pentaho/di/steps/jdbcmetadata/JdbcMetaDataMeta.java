@@ -691,11 +691,11 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * Stores the whether fields are to be used for method arguments
+   * Stores method arguments
    */
   private String[] arguments;
   /**
-   * @return whether fields are to be used as arguments
+   * @return get method arguments
    */
   public String[] getArguments() {
     return arguments;

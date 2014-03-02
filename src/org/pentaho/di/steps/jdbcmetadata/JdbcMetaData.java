@@ -28,6 +28,7 @@ import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMetaInterface;
+import org.pentaho.di.core.logging.LogLevel;
 import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStep;
@@ -192,13 +193,28 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
       //arguments are specified directly by the user in the step.
       //here we convert the string values into proper argument values
       Class<?> argumentType;
+      Object argument;
       for (int i = 0; i < argc; i++) {
         argumentType = argumentTypes[i];
         stringArgument = arguments[i];
-        data.arguments[i] = argumentType.isArray() 
-                          ? stringListToObjectArray(stringArgument, argumentType.getComponentType())
-                          : stringToArgumentValue(stringArgument, argumentType)
-        ;
+        if (stringArgument == null) {
+          argument = null;
+        }
+        else {
+          stringArgument = environmentSubstitute(stringArgument);
+          if (argumentType.isArray()) {
+            if (stringArgument.length() == 0) {
+              argument = null;
+            }
+            else {
+              argument = stringListToObjectArray(stringArgument, argumentType.getComponentType());
+            }
+          }
+          else {
+            argument = stringToArgumentValue(stringArgument, argumentType);        
+          }
+        }
+        data.arguments[i] = argument;
       }
     }
   }
@@ -228,19 +244,20 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     else
     if (JdbcMetaDataMeta.connectionSourceOptionJDBC.equals(connectionSource)) {
       //connection is a user-entered jdbc connection
+      String jdbcDriver = environmentSubstitute(meta.getJdbcDriverField());
+      String jdbcUrl = environmentSubstitute(meta.getJdbcUrlField());
+      String jdbcUser = environmentSubstitute(meta.getJdbcUserField());
+      String jdbcPassword = environmentSubstitute(meta.getJdbcPasswordField());
       logDebug("Attempt to create JDBC connection.");
-      logDebug("Driver: " + meta.getJdbcDriverField());
-      logDebug("Url: " + meta.getJdbcUrlField());
-      logDebug("User: " + meta.getJdbcUserField());
-      connection = createJdbcConnection(
-          meta.getJdbcDriverField(), meta.getJdbcUrlField(), 
-          meta.getJdbcUserField(), meta.getJdbcPasswordField()
-      );
+      logDebug("Driver: " + jdbcDriver);
+      logDebug("Url: " + jdbcUrl);
+      logDebug("User: " + jdbcUser);
+      connection = createJdbcConnection(jdbcDriver, jdbcUrl, jdbcUser, jdbcPassword);
     }
     else
     if (JdbcMetaDataMeta.connectionSourceOptionJDBCFields.equals(connectionSource)) {
       //Connection is a jdbc connection specified by field values
-      //we don't know about the fields yet, but we can initialize a few vars to access their value later on
+      //we don't know the field values yet, but we can initialize a few vars to access their value later on
       connection = null;
       data.jdbcDriverField = -1;
       data.jdbcUrlField = -1;
@@ -250,7 +267,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     else
     if (JdbcMetaDataMeta.connectionSourceOptionConnectionField.equals(connectionSource)){
       //Connection is a named kettle connection specified by a field value
-      //we don't know about the fields yet, but we can initialize a var to access its value later on
+      //we don't know about the field value yet, but we can initialize a var to access its value later on
       connection = null;
       data.connectionField = -1;
     }
@@ -417,14 +434,27 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     //if the arguments are from fields, then we already stored the right indices to take the values from
     Object[] args = data.arguments;
     int[] indices = data.argumentFieldIndices;
+    int index;
     Class<?>[] argumentTypes = data.method.getParameterTypes();
     Class<?> argumentType;
     Object argument;
     for (int i = 0; i < args.length; i++){
-      argument = row[indices[i]];
+      index = indices[i];
+      if (index == -2) {
+        argument = null;
+      }
+      else {
+        argument = row[index];
+      }
       argumentType = argumentTypes[i];
-      if (argumentType.isArray()) {
-        argument = stringListToObjectArray((String)argument, argumentType.getComponentType());
+      if (argumentType.isArray() && argument != null) {
+        if ("".equals(argument)) {
+          logDebug("Converted empty string to null for argument array");
+          argument = null;
+        }
+        else {
+          argument = stringListToObjectArray((String)argument, argumentType.getComponentType());
+        }
       }
       args[i] = argument;
     }
@@ -542,7 +572,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
             logDebug("Trying to match argument fields against: " + fieldName);
             for (int j = 0; j < argc; j++){
               stringArgument = arguments[j];
-              logDebug("Found argument : " + stringArgument);
+              logDebug("Found argument " + j + ": " + stringArgument);
               if (fieldName.equals(stringArgument)) {
                 logDebug("Match, storing index " + i);
                 data.argumentFieldIndices[j] = i;
@@ -570,8 +600,17 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
         if (argumentSourceFields) {
           //ensure all argument fields are provided for
           for (int j = 0; j < argc; j++) {
+            logDebug("Argument indices at " + j + ": " + data.argumentFieldIndices[j]);
             if (data.argumentFieldIndices[j] == -1) {
-              throw new KettleException("No field found for argument " + j);
+              if (arguments[j] == null || arguments[j].length() == 0) {
+                data.argumentFieldIndices[j] = -2;
+              }
+              else {
+                Object[] descriptor = meta.getMethodDescriptor();
+                Object[] args = (Object [])descriptor[1];
+                Object[] arg = (Object[])args[j];
+                throw new KettleException("No field \"" + arguments[j] + "\" found for argument " + j + ": " + ((String)arg[0]));
+              }
             }
           }
           if (meta.getRemoveArgumentFields()) {
@@ -600,9 +639,11 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
       logRowlevel("Processing 1 input row");
       Connection connection = getConnection(meta, data, r);
       prepareMethodArguments(meta, data, r);
-      logRowlevel("About to invoke method");
-      for (int i = 0; i < data.arguments.length; i++){
-        logRowlevel("Argument " + i +"; " + (data.arguments[i] == null ? "null" : data.arguments[i].toString() + "; " + data.arguments[i].getClass().getName()));
+      if (getLogLevel() == LogLevel.ROWLEVEL){
+        logRowlevel("About to invoke method");
+        for (int i = 0; i < data.arguments.length; i++){
+          logRowlevel("Argument " + i +"; " + (data.arguments[i] == null ? "null" : data.arguments[i].toString() + "; " + data.arguments[i].getClass().getName()));
+        }
       }
       DatabaseMetaData databaseMetaData = connection.getMetaData();
       ResultSet resultSet = (ResultSet)data.method.invoke(databaseMetaData, data.arguments);

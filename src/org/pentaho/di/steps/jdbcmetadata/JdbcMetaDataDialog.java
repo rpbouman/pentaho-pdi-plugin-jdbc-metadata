@@ -100,13 +100,16 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
   private int middle = props.getMiddlePct();
   private int margin = Const.MARGIN;
 
+  private boolean dialogChanged;
+  private ModifyListener lsMod;
+  
   private Composite metadataComposite;
   //
   private CCombo connectionSourceCombo;
   //
   private CCombo connectionCombo;
   // text field holding the name of the field containing the connection name
-  private ComboVar connectionField;
+  private CCombo connectionField;
   // text field holding the name of the field containing the driver name
   private ComboVar jdbcDriverField;
   // text field holding the name of the field containing the url
@@ -224,7 +227,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
    * @param items
    * @return The combobox where the user enters the argument.
    */
-  private CCombo createArgumentUI(Object[] argumentDescriptor, Control lastControl, String[] items){
+  private ComboVar createArgumentUI(Object[] argumentDescriptor, Control lastControl, String[] items){
     String argumentName = (String)argumentDescriptor[0];
     Label label = new Label(metadataComposite, SWT.RIGHT);
     label.setText(BaseMessages.getString(PKG, "JdbcMetadata.arguments." + argumentName + ".Label"));
@@ -236,16 +239,18 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     labelFormData.top = new FormAttachment(lastControl, margin);
     label.setLayoutData(labelFormData);
     
-    CCombo cCombo = new CCombo(metadataComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-    props.setLook(cCombo);
-    FormData cComboFormData = new FormData();
-    cComboFormData.left = new FormAttachment(middle, 0);
-    cComboFormData.right = new FormAttachment(100, 0);
-    cComboFormData.top = new FormAttachment(lastControl, margin);
-    cCombo.setLayoutData(cComboFormData);
-    cCombo.setItems(items);
+    ComboVar comboVar = new ComboVar(transMeta, metadataComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+    props.setLook(comboVar);
+    FormData comboVarFormData = new FormData();
+    comboVarFormData.left = new FormAttachment(middle, 0);
+    comboVarFormData.right = new FormAttachment(100, 0);
+    comboVarFormData.top = new FormAttachment(lastControl, margin);
+    comboVar.setLayoutData(comboVarFormData);
+    comboVar.setItems(items);
 
-    return cCombo;
+    comboVar.addModifyListener(lsMod);
+    
+    return comboVar;
   }
   /**
    * Create UI to enter arguments.
@@ -260,15 +265,15 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     String[] items = argumentSourceFields.getSelection() ? getFieldListForCombo() : emptyFieldList;
     for (int i = 0; i < argc; i++){
       argumentDescriptor = (Object[])argumentDescriptors[i];
-      CCombo cCombo = createArgumentUI(argumentDescriptor, lastControl, items);
-      lastControl = cCombo;
+      ComboVar comboVar = createArgumentUI(argumentDescriptor, lastControl, items);
+      lastControl = comboVar;
       
       //copy the old argument values to the new arguments array
       if (i >= currentValues.length) continue;
       String argumentValue = currentValues[i];
       newArguments[i] = argumentValue;
       if (argumentValue == null) continue;
-      cCombo.setText(argumentValue);
+      comboVar.setText(argumentValue);
     }
     return newArguments;
   }
@@ -379,7 +384,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
    * or null if the user cancelled the dialog.
    */
   public String open() {
-
+    dialogChanged = false;
     // store some convenient SWT variables 
     Shell parent = getParent();
     Display display = parent.getDisplay();
@@ -396,9 +401,9 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     
     // The ModifyListener used on all controls. It will update the meta object to 
     // indicate that changes are being made.
-    ModifyListener lsMod = new ModifyListener() {
+    lsMod = new ModifyListener() {
       public void modifyText(ModifyEvent e) {
-        meta.setChanged();
+        dialogChanged = true;
       }
     };
     
@@ -501,13 +506,6 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
       }
 */
     connectionCombo.addModifyListener( lsMod );
-    connectionCombo.addModifyListener( 
-      new ModifyListener() {
-        public void modifyText( ModifyEvent event ) {
-          //setFlags();
-        }
-      }
-    );
     //connectionCombo.addSelectionListener( lsSelection );
     lastControl = connectionCombo;
 
@@ -522,7 +520,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     connectionFieldLabelFormData.top = new FormAttachment(lastControl, margin);
     connectionFieldLabel.setLayoutData(connectionFieldLabelFormData);
 
-    connectionField = new ComboVar( transMeta, connectionComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    connectionField = new CCombo( connectionComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     props.setLook(connectionField);
     connectionField.addModifyListener(lsMod);
     FormData connectionFieldFormData = new FormData();
@@ -1009,20 +1007,22 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     meta.setArguments(getArguments());
     meta.setRemoveArgumentFields(removeArgumentFieldsButton.getSelection());
     meta.setOutputFields(getOutputFields());
+
+    meta.setChanged(dialogChanged || changed);
     // close the SWT dialog window
     dispose();
   }
 
   private String[] getArguments(){
+    logDebug("getArguments");
     List<String> list = new ArrayList<String>();
     Control [] controls = metadataComposite.getChildren();
     String text;
     for (Control control : controls) {
-      if (!(control instanceof CCombo) || control == methodCombo) continue;
-      CCombo cCombo = (CCombo)control;
-      text = cCombo.getText();
-      //TODO: ensure proper NULL vs empty string behavior.
-      list.add("".equals(text) ? null : text);
+      if (!(control instanceof ComboVar)) continue;
+      ComboVar comboVar = (ComboVar)control;
+      text = comboVar.getText();
+      list.add(text);
     }
     String[] arguments = new String[list.size()];
     list.toArray(arguments);
