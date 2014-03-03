@@ -441,7 +441,28 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     lastControl = wStepname;
 
-    //Tabfolder
+    //pass the row checkbox
+    alwaysPassInputRowLabel = new Label(shell, SWT.RIGHT);
+    alwaysPassInputRowLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.passRow.Label"));
+    alwaysPassInputRowLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.passRow.Tooltip"));
+    props.setLook(alwaysPassInputRowLabel);
+    FormData alwaysPassInputRowLabelFormData = new FormData();
+    alwaysPassInputRowLabelFormData.left = new FormAttachment(0, 0);
+    alwaysPassInputRowLabelFormData.right = new FormAttachment(middle, -margin);
+    alwaysPassInputRowLabelFormData.top = new FormAttachment(lastControl, margin);
+    alwaysPassInputRowLabel.setLayoutData(alwaysPassInputRowLabelFormData);
+
+    alwaysPassInputRowButton = new Button(shell, SWT.CHECK);
+    props.setLook(alwaysPassInputRowButton);
+    FormData alwaysPassInputRowButtonFormData = new FormData();
+    alwaysPassInputRowButtonFormData.left = new FormAttachment(middle, 0);
+    alwaysPassInputRowButtonFormData.right = new FormAttachment(100, 0);
+    alwaysPassInputRowButtonFormData.top = new FormAttachment(lastControl, margin);
+    alwaysPassInputRowButton.setLayoutData(alwaysPassInputRowButtonFormData);
+    
+    lastControl = alwaysPassInputRowButton;
+
+    //
     CTabFolder cTabFolder = new CTabFolder( shell, SWT.BORDER );
     props.setLook(cTabFolder, Props.WIDGET_STYLE_TAB );
 
@@ -642,27 +663,6 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     props.setLook(metadataComposite);
     metadataComposite.setLayout(metadataTabLayout);
 
-    //pass the row checkbox
-    alwaysPassInputRowLabel = new Label(metadataComposite, SWT.RIGHT);
-    alwaysPassInputRowLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.passRow.Label"));
-    alwaysPassInputRowLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.passRow.Tooltip"));
-    props.setLook(alwaysPassInputRowLabel);
-    FormData alwaysPassInputRowLabelFormData = new FormData();
-    alwaysPassInputRowLabelFormData.left = new FormAttachment(0, 0);
-    alwaysPassInputRowLabelFormData.right = new FormAttachment(middle, -margin);
-    alwaysPassInputRowLabelFormData.top = new FormAttachment(lastControl, margin);
-    alwaysPassInputRowLabel.setLayoutData(alwaysPassInputRowLabelFormData);
-
-    alwaysPassInputRowButton = new Button(metadataComposite, SWT.CHECK);
-    props.setLook(alwaysPassInputRowButton);
-    FormData alwaysPassInputRowButtonFormData = new FormData();
-    alwaysPassInputRowButtonFormData.left = new FormAttachment(middle, 0);
-    alwaysPassInputRowButtonFormData.right = new FormAttachment(100, 0);
-    alwaysPassInputRowButtonFormData.top = new FormAttachment(lastControl, margin);
-    alwaysPassInputRowButton.setLayoutData(alwaysPassInputRowButtonFormData);
-    
-    lastControl = alwaysPassInputRowButton;
-
     //method
     methodLabel = new Label(metadataComposite, SWT.RIGHT);
     methodLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.metadataMethod.Label"));
@@ -671,7 +671,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     FormData methodLabelFormData = new FormData();
     methodLabelFormData.left = new FormAttachment(0, 0);
     methodLabelFormData.right = new FormAttachment(middle, -margin);
-    methodLabelFormData.top = new FormAttachment(lastControl, margin);
+    methodLabelFormData.top = new FormAttachment(0, margin);
     methodLabel.setLayoutData(methodLabelFormData);
 
     methodCombo = new CCombo(metadataComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
@@ -738,9 +738,9 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
         removeArgumentFieldsButton.setEnabled(selection);
         String[] items = selection ? getFieldListForCombo() : emptyFieldList;
         for (Control control : controls) {
-          if (!(control instanceof CCombo) || control == methodCombo) continue;
-          CCombo cCombo = (CCombo)control;
-          cCombo.setItems(items);
+          if (!(control instanceof ComboVar)) continue;
+          ComboVar comboVar = (ComboVar)control;
+          comboVar.setItems(items);
         }
       }
       
@@ -749,7 +749,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     lastControl = argumentSourceFields;
     
-    //argument source
+    //remove arguments
     removeArgumentFieldsLabel = new Label(metadataComposite, SWT.RIGHT);
     removeArgumentFieldsLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.removeArgumentFields.Label"));
     removeArgumentFieldsLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.removeArgumentFields.Tooltip"));
@@ -863,9 +863,10 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     BaseStepDialog.positionBottomButtons(shell, new Button[] { wOK, wCancel }, margin, null);
 
+    //Tabfolder
     FormData cTabFolderFormData = new FormData();
     cTabFolderFormData.left = new FormAttachment( 0, 0 );
-    cTabFolderFormData.top = new FormAttachment(wStepname, margin );
+    cTabFolderFormData.top = new FormAttachment(alwaysPassInputRowButton, margin );
     cTabFolderFormData.right = new FormAttachment( 100, 0 );
     cTabFolderFormData.bottom = new FormAttachment( wOK, -margin );
     cTabFolder.setLayoutData(cTabFolderFormData);	    
