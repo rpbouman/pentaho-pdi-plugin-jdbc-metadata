@@ -1,8 +1,8 @@
 /*******************************************************************************
  *
- * Pentaho Data Integration
+ * JdbcMetaData plugin step for Pentaho Data Integration
  *
- * Copyright (C) 2002-2012 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2014 by Roland Bouman: roland.bouman@gmail.com
  *
  *******************************************************************************
  *
@@ -253,6 +253,14 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       new ValueMetaInterface[]{COL_TABLE_SCHEM, COL_TABLE_CATALOG},
       null
     },
+    /*  We'd love to use this version of getSchemas, but we found that calling it throws AbstractMethodError in h2 and sqlite (possibly others)
+    new Object[]{
+      "getSchemas", 
+      new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN}, 
+      new ValueMetaInterface[]{COL_TABLE_SCHEM, COL_TABLE_CATALOG},
+      null
+    },
+    */
     new Object[]{
       "getTablePrivileges", 
       new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN, ARG_TABLE_NAME_PATTERN},

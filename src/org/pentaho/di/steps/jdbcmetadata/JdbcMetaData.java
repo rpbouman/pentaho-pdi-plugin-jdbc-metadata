@@ -1,8 +1,8 @@
 /*******************************************************************************
  *
- * Pentaho Data Integration
+ * JdbcMetaData plugin step for Pentaho Data Integration
  *
- * Copyright (C) 2002-2013 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2014 by Roland Bouman: roland.bouman@gmail.com
  *
  *******************************************************************************
  *
@@ -44,6 +44,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -596,32 +597,57 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
         ) {
             throw new KettleException("Not all fields for the connection source were found.");
         }
-        
+
         if (argumentSourceFields) {
-          //ensure all argument fields are provided for
-          for (int j = 0; j < argc; j++) {
+          //keep track of how many fields we used as args.
+          //We need this in case remove argument fields is enabled
+          //as this is the number of fields we need to discard from the input row. 
+          int fieldsUsedAsArgs = 0;
+          //ensure all argument fields are bound to a valid field
+          argumentFields: for (int j = 0; j < argc; j++) {
             logDebug("Argument indices at " + j + ": " + data.argumentFieldIndices[j]);
             if (data.argumentFieldIndices[j] == -1) {
+              //this argument does not point to any existing field.
               if (arguments[j] == null || arguments[j].length() == 0) {
+                //the argument is blank, this is ok: we will pass null instead
                 data.argumentFieldIndices[j] = -2;
               }
               else {
+                //this argument is not blank - this means it points to a non-existing field.
+                //this is an error.
                 Object[] descriptor = meta.getMethodDescriptor();
                 Object[] args = (Object [])descriptor[1];
                 Object[] arg = (Object[])args[j];
                 throw new KettleException("No field \"" + arguments[j] + "\" found for argument " + j + ": " + ((String)arg[0]));
               }
             }
+            else {
+              //this argument points to a valid field.
+              //let's check if this same field was already used as arg: 
+              for (int i = 0; i < j; i++){
+                if (data.argumentFieldIndices[i] == data.argumentFieldIndices[j]) {
+                  //yes, it was used already. Let's check the next argument.
+                  continue argumentFields;
+                }
+              }
+              //this field was not used already, so mark it as used.
+              fieldsUsedAsArgs++;
+            }
           }
+          
           if (meta.getRemoveArgumentFields()) {
             int n = data.outputRowOffset;
-            data.outputRowOffset -= argc;
+            data.outputRowOffset -= fieldsUsedAsArgs;
             data.inputFieldsToCopy = new int[data.outputRowOffset];
             
-            inputFieldsToCopy: for (int i = 0, j = 0; i < n; i++) {
-              for (int k = 0; k < argc; k++) {
-                if (data.argumentFieldIndices[k] == i) continue inputFieldsToCopy;
+            inputFieldsToCopy: for (int i = 0, j = 0; i < n; i++) { //for each field in the input row
+              for (int k = 0; k < argc; k++) {  //for each method argument
+                if (data.argumentFieldIndices[k] == i) {
+                  //this input field is used as argument. Continue to the next field. 
+                  continue inputFieldsToCopy;
+                }
               }
+              //this field was not used as argument. make sure we copy it to the output.
               data.inputFieldsToCopy[j++] = i;
             }
           }
@@ -661,6 +687,19 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
           if (k > columnCount) continue;
           valueMetaInterface = data.outputRowMeta.getValueMeta(i);
           switch (valueMetaInterface.getType()) {
+            case ValueMetaInterface.TYPE_BOOLEAN: //while the JDBC spec prescribes boolean, not all drivers actually can deliver.
+              boolean v;
+              switch (resultSetMetaData.getColumnType(k)) {
+                case Types.INTEGER:
+                case Types.SMALLINT:
+                case Types.TINYINT:
+                  v = resultSet.getInt(k) == 1 ? true : false;
+                  break;
+                default:
+                  v = resultSet.getBoolean(k);
+              }
+              value = new Boolean(v);
+              break;
             case ValueMetaInterface.TYPE_INTEGER:
               value = new Long(resultSet.getInt(k));
               break;
@@ -682,8 +721,13 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
       logRowlevel("Done processing 1 input row.");
     } 
     catch (Exception exception) {
-      if (exception instanceof KettleException) throw (KettleException)exception;
-      throw new KettleException(exception);
+      exception.printStackTrace();
+      if (exception instanceof KettleException) {
+        throw (KettleException)exception;
+      }
+      else {
+        throw new KettleException(exception);
+      }
     }
 
     // log progress if it is time to to so

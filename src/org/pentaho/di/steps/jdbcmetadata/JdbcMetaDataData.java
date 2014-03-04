@@ -1,8 +1,8 @@
 /*******************************************************************************
  *
- * Pentaho Data Integration
+ * JdbcMetaData plugin step for Pentaho Data Integration
  *
- * Copyright (C) 2002-2012 by Pentaho : http://www.pentaho.com
+ * Copyright (C) 2014 by Roland Bouman: roland.bouman@gmail.com
  *
  *******************************************************************************
  *
