@@ -348,6 +348,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   /**
    * Constructor should call super() to make sure the base class has a chance to initialize properly.
    */
+  @SuppressWarnings("unchecked")
   public JdbcMetaDataMeta() {
     super();
     if (JdbcMetaDataMeta.DatabaseMetaDataClass == null) {
@@ -534,7 +535,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
   /**
    * Setter for the name of the field containing the jdbc user
-   * @param jdbcDriverField the name of the field containing the jdbc user
+   * @param jdbcUserField the name of the field containing the jdbc user
    */
   public void setJdbcUserField(String jdbcUserField) {
     this.jdbcUserField = jdbcUserField;
@@ -553,7 +554,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
   /**
    * Setter for the name of the field containing the jdbc password
-   * @param jdbcDriverField the name of the field containing the jdbc password
+   * @param jdbcPasswordField the name of the field containing the jdbc password
    */
   public void setJdbcPasswordField(String jdbcPasswordField) {
     this.jdbcPasswordField = jdbcPasswordField;
@@ -570,7 +571,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     return alwaysPassInputRow;
   }
   /**
-   * @param argumentSourceFields whether fields should be used as arguments
+   * @param alwaysPassInputRow whether fields should be used as arguments
    */
   public void setAlwaysPassInputRow(boolean alwaysPassInputRow) {
     this.alwaysPassInputRow = alwaysPassInputRow;
@@ -709,7 +710,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     return arguments;
   }
   /**
-   * @param argumentSourceFields whether fields should be used as arguments
+   * @param arguments whether fields should be used as arguments
    */
   public void setArguments(String[] arguments) {
     this.arguments = arguments;
@@ -726,7 +727,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     return outputFields;
   }
   /**
-   * @param argumentSourceFields whether fields should be used as arguments
+   * @param outputFields whether fields should be used as arguments
    */
   public void setOutputFields(Object[] outputFields) {
     this.outputFields = outputFields;
@@ -757,7 +758,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
    */
   public String getXML() throws KettleValueException {		
     // only one field to serialize
-    StringBuffer xml = new StringBuffer();
+    StringBuilder xml = new StringBuilder();
     String indent = "    ";
     xml.append(indent);
     xml.append(XMLHandler.addTagValue(CONNECTION_SOURCE, connectionSource));
@@ -785,7 +786,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     xml.append(indent);
     xml.append("<" + ARGUMENTS + ">\n");
     for (int i = 0; i < arguments.length; i++) {
-      xml.append(indent + indent);
+      xml.append(indent).append(indent);
       xml.append(XMLHandler.addTagValue(ARGUMENT, arguments[i]));
     }
     xml.append(indent);
@@ -797,13 +798,13 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       Object[] outputField;
       for (int i = 0; i < outputFields.length; i++) {
         outputField = (Object[])outputFields[i];
-        xml.append(indent + indent);
+        xml.append(indent).append(indent);
         xml.append("<" + OUTPUT_FIELD + ">\n");
-        xml.append(indent + indent + indent);
+        xml.append(indent).append(indent).append(indent);
         xml.append(XMLHandler.addTagValue(FIELD_NAME, (String)outputField[0]));
-        xml.append(indent + indent + indent);
+        xml.append(indent).append(indent).append(indent);
         xml.append(XMLHandler.addTagValue(FIELD_RENAME, (String)outputField[1]));
-        xml.append(indent + indent);
+        xml.append(indent).append(indent);
         xml.append("</" + OUTPUT_FIELD + ">\n");
       }
     }
@@ -888,7 +889,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       rep.saveStepAttribute(id_transformation, id_step, ARGUMENT_SOURCE_FIELDS, argumentSourceFields);
       rep.saveStepAttribute(id_transformation, id_step, REMOVE_ARGUMENT_FIELDS, removeArgumentFields);
       for (int i = 0; i < arguments.length; i++) {
-        rep.saveStepAttribute(id_transformation, id_step, i, ARGUMENT, arguments[i]);
+        rep.saveStepAttribute(id_transformation, id_step, i, ARGUMENT, arguments[i] == null ? "" : arguments[i]);
       }
       String[] outputField;
       for (int i = 0; i < outputFields.length; i++) {
@@ -920,10 +921,10 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       setJdbcUrlField(rep.getStepAttributeString(id_step, JDBC_URL_FIELD));
       setJdbcUserField(rep.getStepAttributeString(id_step, JDBC_USER_FIELD));
       setJdbcPasswordField(rep.getStepAttributeString(id_step, JDBC_PASSWORD_FIELD));
-      setAlwaysPassInputRow("Y".equals(rep.getStepAttributeString(id_step, ALWAYS_PASS_INPUT_ROW)));
+      setAlwaysPassInputRow((rep.getStepAttributeBoolean(id_step, ALWAYS_PASS_INPUT_ROW)));
       setMethodName(rep.getStepAttributeString(id_step, METHOD_NAME));
-      setArgumentSourceFields("Y".equals(rep.getStepAttributeString(id_step, ARGUMENT_SOURCE_FIELDS)));
-      setRemoveArgumentFields("Y".equals(rep.getStepAttributeString(id_step, REMOVE_ARGUMENT_FIELDS)));
+      setArgumentSourceFields(rep.getStepAttributeBoolean(id_step, ARGUMENT_SOURCE_FIELDS));
+      setRemoveArgumentFields(rep.getStepAttributeBoolean(id_step, REMOVE_ARGUMENT_FIELDS));
 
       int n;
       n = rep.countNrStepAttributes(id_step, ARGUMENT);
@@ -932,7 +933,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
         arguments[i] = rep.getStepAttributeString(id_step, i, ARGUMENT);
       }
       
-      n = rep.countNrStepAttributes(id_step, OUTPUT_FIELD);
+      n = rep.countNrStepAttributes(id_step, FIELD_NAME);
       outputFields = new Object[n];
       String[] outputField;
       for (int i = 0; i < n; i++) {
