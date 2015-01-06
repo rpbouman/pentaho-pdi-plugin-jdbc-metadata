@@ -889,7 +889,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       rep.saveStepAttribute(id_transformation, id_step, ARGUMENT_SOURCE_FIELDS, argumentSourceFields);
       rep.saveStepAttribute(id_transformation, id_step, REMOVE_ARGUMENT_FIELDS, removeArgumentFields);
       for (int i = 0; i < arguments.length; i++) {
-        rep.saveStepAttribute(id_transformation, id_step, i, ARGUMENT, arguments[i]);
+        rep.saveStepAttribute(id_transformation, id_step, i, ARGUMENT, arguments[i] == null ? "" : arguments[i]);
       }
       String[] outputField;
       for (int i = 0; i < outputFields.length; i++) {
@@ -921,10 +921,10 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       setJdbcUrlField(rep.getStepAttributeString(id_step, JDBC_URL_FIELD));
       setJdbcUserField(rep.getStepAttributeString(id_step, JDBC_USER_FIELD));
       setJdbcPasswordField(rep.getStepAttributeString(id_step, JDBC_PASSWORD_FIELD));
-      setAlwaysPassInputRow("Y".equals(rep.getStepAttributeString(id_step, ALWAYS_PASS_INPUT_ROW)));
+      setAlwaysPassInputRow((rep.getStepAttributeBoolean(id_step, ALWAYS_PASS_INPUT_ROW)));
       setMethodName(rep.getStepAttributeString(id_step, METHOD_NAME));
-      setArgumentSourceFields("Y".equals(rep.getStepAttributeString(id_step, ARGUMENT_SOURCE_FIELDS)));
-      setRemoveArgumentFields("Y".equals(rep.getStepAttributeString(id_step, REMOVE_ARGUMENT_FIELDS)));
+      setArgumentSourceFields(rep.getStepAttributeBoolean(id_step, ARGUMENT_SOURCE_FIELDS));
+      setRemoveArgumentFields(rep.getStepAttributeBoolean(id_step, REMOVE_ARGUMENT_FIELDS));
 
       int n;
       n = rep.countNrStepAttributes(id_step, ARGUMENT);
@@ -933,7 +933,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
         arguments[i] = rep.getStepAttributeString(id_step, i, ARGUMENT);
       }
       
-      n = rep.countNrStepAttributes(id_step, OUTPUT_FIELD);
+      n = rep.countNrStepAttributes(id_step, FIELD_NAME);
       outputFields = new Object[n];
       String[] outputField;
       for (int i = 0; i < n; i++) {
