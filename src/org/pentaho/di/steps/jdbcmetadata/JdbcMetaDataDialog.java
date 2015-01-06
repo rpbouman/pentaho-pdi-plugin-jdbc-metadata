@@ -329,7 +329,9 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     for (int i = 0; i < n; i++) {
       outputField = (String[])outputFields[i];
       tableItem = table.getItem(i);
+      if (outputField.length == 0) continue; 
       tableItem.setText(1, outputField[0]);
+      if (outputField.length == 1) continue; 
       tableItem.setText(2, outputField[1]);
     }
   }
