@@ -758,7 +758,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
    */
   public String getXML() throws KettleValueException {		
     // only one field to serialize
-    StringBuffer xml = new StringBuffer();
+    StringBuilder xml = new StringBuilder();
     String indent = "    ";
     xml.append(indent);
     xml.append(XMLHandler.addTagValue(CONNECTION_SOURCE, connectionSource));
@@ -786,7 +786,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     xml.append(indent);
     xml.append("<" + ARGUMENTS + ">\n");
     for (int i = 0; i < arguments.length; i++) {
-      xml.append(indent + indent);
+      xml.append(indent).append(indent);
       xml.append(XMLHandler.addTagValue(ARGUMENT, arguments[i]));
     }
     xml.append(indent);
@@ -798,13 +798,13 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       Object[] outputField;
       for (int i = 0; i < outputFields.length; i++) {
         outputField = (Object[])outputFields[i];
-        xml.append(indent + indent);
+        xml.append(indent).append(indent);
         xml.append("<" + OUTPUT_FIELD + ">\n");
-        xml.append(indent + indent + indent);
+        xml.append(indent).append(indent).append(indent);
         xml.append(XMLHandler.addTagValue(FIELD_NAME, (String)outputField[0]));
-        xml.append(indent + indent + indent);
+        xml.append(indent).append(indent).append(indent);
         xml.append(XMLHandler.addTagValue(FIELD_RENAME, (String)outputField[1]));
-        xml.append(indent + indent);
+        xml.append(indent).append(indent);
         xml.append("</" + OUTPUT_FIELD + ">\n");
       }
     }
