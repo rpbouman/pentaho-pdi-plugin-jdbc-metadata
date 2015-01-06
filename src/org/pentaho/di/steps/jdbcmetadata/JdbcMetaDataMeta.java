@@ -348,6 +348,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   /**
    * Constructor should call super() to make sure the base class has a chance to initialize properly.
    */
+  @SuppressWarnings("unchecked")
   public JdbcMetaDataMeta() {
     super();
     if (JdbcMetaDataMeta.DatabaseMetaDataClass == null) {

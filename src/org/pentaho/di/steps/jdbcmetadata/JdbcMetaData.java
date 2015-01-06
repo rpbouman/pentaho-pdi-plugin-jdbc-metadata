@@ -145,6 +145,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
    * @param connectionName The name of the kettle connection
    * @return The database object
    */
+  @SuppressWarnings("deprecation")
   private Database findDatabase(String connectionName){
     DatabaseMeta databaseMeta = getTransMeta().findDatabase(connectionName);
     if (databaseMeta == null) {
