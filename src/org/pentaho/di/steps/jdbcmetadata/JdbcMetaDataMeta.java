@@ -534,7 +534,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
   /**
    * Setter for the name of the field containing the jdbc user
-   * @param jdbcDriverField the name of the field containing the jdbc user
+   * @param jdbcUserField the name of the field containing the jdbc user
    */
   public void setJdbcUserField(String jdbcUserField) {
     this.jdbcUserField = jdbcUserField;
@@ -553,7 +553,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
   /**
    * Setter for the name of the field containing the jdbc password
-   * @param jdbcDriverField the name of the field containing the jdbc password
+   * @param jdbcPasswordField the name of the field containing the jdbc password
    */
   public void setJdbcPasswordField(String jdbcPasswordField) {
     this.jdbcPasswordField = jdbcPasswordField;
@@ -570,7 +570,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     return alwaysPassInputRow;
   }
   /**
-   * @param argumentSourceFields whether fields should be used as arguments
+   * @param alwaysPassInputRow whether fields should be used as arguments
    */
   public void setAlwaysPassInputRow(boolean alwaysPassInputRow) {
     this.alwaysPassInputRow = alwaysPassInputRow;
@@ -709,7 +709,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     return arguments;
   }
   /**
-   * @param argumentSourceFields whether fields should be used as arguments
+   * @param arguments whether fields should be used as arguments
    */
   public void setArguments(String[] arguments) {
     this.arguments = arguments;
@@ -726,7 +726,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     return outputFields;
   }
   /**
-   * @param argumentSourceFields whether fields should be used as arguments
+   * @param outputFields whether fields should be used as arguments
    */
   public void setOutputFields(Object[] outputFields) {
     this.outputFields = outputFields;

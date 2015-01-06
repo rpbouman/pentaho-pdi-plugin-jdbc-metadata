@@ -100,8 +100,8 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
 
   /**
    * Utility to convert a string value entered by the user into an argument (or argument array element) for a metadata method.
-   * @param user-entered string value
-   * @param class that represents the type of the value as it is passed as argument to a metadata method
+   * @param stringValue string value
+   * @param type class that represents the type of the value as it is passed as argument to a metadata method
    * @return an object that represents the value in the specified type
    * @throws IllegalArgumentException
    */
