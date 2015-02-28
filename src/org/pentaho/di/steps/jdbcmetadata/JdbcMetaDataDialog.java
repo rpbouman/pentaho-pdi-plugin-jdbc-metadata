@@ -70,31 +70,31 @@ import org.pentaho.di.core.exception.KettleException;
 
 /**
  * This class is part of the demo step plug-in implementation.
- * It demonstrates the basics of developing a plug-in step for PDI. 
- * 
+ * It demonstrates the basics of developing a plug-in step for PDI.
+ *
  * The demo step adds a new string field to the row stream and sets its
  * value to "Hello World!". The user may select the name of the new field.
- *   
+ *
  * This class is the implementation of StepDialogInterface.
  * Classes implementing this interface need to:
- * 
+ *
  * - build and open a SWT dialog displaying the step's settings (stored in the step's meta object)
  * - write back any changes the user makes to the step's meta object
- * - report whether the user changed any settings when confirming the dialog 
- * 
+ * - report whether the user changed any settings when confirming the dialog
+ *
  */
 public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInterface {
 
   /**
   * The PKG member is used when looking up internationalized strings.
-  * The properties file with localized keys is expected to reside in 
-  * {the package of the class specified}/messages/messages_{locale}.properties   
+  * The properties file with localized keys is expected to reside in
+  * {the package of the class specified}/messages/messages_{locale}.properties
   */
   private static Class<?> PKG = JdbcMetaDataMeta.class; // for i18n purposes
-  
+
   // this is the object the stores the step's settings
   // the dialog reads the settings from it when opening
-  // the dialog writes the settings to it when confirmed 
+  // the dialog writes the settings to it when confirmed
   private JdbcMetaDataMeta meta;
 
   private int middle = props.getMiddlePct();
@@ -102,7 +102,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
   private boolean dialogChanged;
   private ModifyListener lsMod;
-  
+
   private Composite metadataComposite;
   //
   private CCombo connectionSourceCombo;
@@ -127,7 +127,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
   private Label methodLabel;
   //
   private CCombo methodCombo;
-  
+
   private Label argumentSourceLabel;
   //
   private Button argumentSourceFields;
@@ -141,11 +141,11 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
    * The constructor should simply invoke super() and save the incoming meta
    * object to a local variable, so it can conveniently read and write settings
    * from/to it.
-   * 
-   * @param parent 	the SWT shell to open the dialog in
+   *
+   * @param parent  the SWT shell to open the dialog in
    * @param in the meta object holding the step's settings
-   * @param transMeta	transformation description
-   * @param sname		the step name
+   * @param transMeta transformation description
+   * @param sname   the step name
    */
   public JdbcMetaDataDialog(Shell parent, Object in, TransMeta transMeta, String sname) {
     super(parent, (BaseStepMeta) in, transMeta, sname);
@@ -164,7 +164,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     }
     return items;
   }
-  
+
   private void connectionSourceUpdated(){
     int selectedIndex = connectionSourceCombo.getSelectionIndex();
     String option = JdbcMetaDataMeta.connectionSourceOptions[selectedIndex];
@@ -208,7 +208,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     for (Control control : controls) {
       if (
         control == alwaysPassInputRowLabel || control == alwaysPassInputRowButton ||
-        control == methodLabel || control == methodCombo || 
+        control == methodLabel || control == methodCombo ||
         control == argumentSourceLabel || control == argumentSourceFields ||
         control == removeArgumentFieldsLabel || control == removeArgumentFieldsButton
       ) continue;
@@ -219,7 +219,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     }
     return currentValues;
   }
-  
+
   /**
    * Create the UI to enter one argument.
    * @param argumentDescriptor
@@ -238,7 +238,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     labelFormData.right = new FormAttachment(middle, -margin);
     labelFormData.top = new FormAttachment(lastControl, margin);
     label.setLayoutData(labelFormData);
-    
+
     ComboVar comboVar = new ComboVar(transMeta, metadataComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
     props.setLook(comboVar);
     FormData comboVarFormData = new FormData();
@@ -249,7 +249,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     comboVar.setItems(items);
 
     comboVar.addModifyListener(lsMod);
-    
+
     return comboVar;
   }
   /**
@@ -267,7 +267,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
       argumentDescriptor = (Object[])argumentDescriptors[i];
       ComboVar comboVar = createArgumentUI(argumentDescriptor, lastControl, items);
       lastControl = comboVar;
-      
+
       //copy the old argument values to the new arguments array
       if (i >= currentValues.length) continue;
       String argumentValue = currentValues[i];
@@ -277,7 +277,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     }
     return newArguments;
   }
-  
+
   /**
    * fill the fields table with output fields.
    */
@@ -326,13 +326,18 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     Table table = outputFieldsTableView.table;
     table.setItemCount(n);
     TableItem tableItem;
+    String text;
     for (int i = 0; i < n; i++) {
       outputField = (String[])outputFields[i];
       tableItem = table.getItem(i);
-      if (outputField.length == 0) continue; 
-      tableItem.setText(1, outputField[0]);
-      if (outputField.length == 1) continue; 
-      tableItem.setText(2, outputField[1]);
+
+      if (outputField.length == 0) continue;
+      text = outputField[0];
+      tableItem.setText(1, text == null ? "" : text);
+
+      if (outputField.length == 1) continue;
+      text = outputField[1];
+      tableItem.setText(2, text == null ? "" : text);
     }
   }
 
@@ -348,7 +353,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
       argumentValues = new String[currentValues.size()];
       currentValues.toArray(argumentValues);
     }
-    
+
     //setup controls for the current set of arguments
     int index = methodCombo.getSelectionIndex();
     Object[] methodDescriptor = (Object[])JdbcMetaDataMeta.methodDescriptors[index];
@@ -363,10 +368,10 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     argumentSourceLabel.setVisible(visible);
     removeArgumentFieldsLabel.setVisible(visible);
     removeArgumentFieldsButton.setVisible(visible);
-    
+
     metadataComposite.layout();
   }
-  
+
   private void methodUpdated(){
     logDebug("Parameterless methodUpdated called.");
     methodUpdated(null);
@@ -374,41 +379,41 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
   /**
    * This method is called by Spoon when the user opens the settings dialog of the step.
    * It should open the dialog and return only once the dialog has been closed by the user.
-   * 
+   *
    * If the user confirms the dialog, the meta object (passed in the constructor) must
-   * be updated to reflect the new step settings. The changed flag of the meta object must 
+   * be updated to reflect the new step settings. The changed flag of the meta object must
    * reflect whether the step configuration was changed by the dialog.
-   * 
+   *
    * If the user cancels the dialog, the meta object must not be updated, and its changed flag
    * must remain unaltered.
-   * 
+   *
    * The open() method must return the name of the step after the user has confirmed the dialog,
    * or null if the user cancelled the dialog.
    */
   public String open() {
     dialogChanged = false;
-    // store some convenient SWT variables 
+    // store some convenient SWT variables
     Shell parent = getParent();
     Display display = parent.getDisplay();
-    
+
     // SWT code for preparing the dialog
     shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MIN | SWT.MAX);
     props.setLook(shell);
     setShellImage(shell, meta);
-    
+
     // Save the value of the changed flag on the meta object. If the user cancels
     // the dialog, it will be restored to this saved value.
     // The "changed" variable is inherited from BaseStepDialog
     changed = meta.hasChanged();
-    
-    // The ModifyListener used on all controls. It will update the meta object to 
+
+    // The ModifyListener used on all controls. It will update the meta object to
     // indicate that changes are being made.
     lsMod = new ModifyListener() {
       public void modifyText(ModifyEvent e) {
         dialogChanged = true;
       }
     };
-    
+
     // ------------------------------------------------------- //
     // SWT code for building the actual settings dialog        //
     // ------------------------------------------------------- //
@@ -419,11 +424,11 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     formLayout.marginHeight = Const.FORM_MARGIN;
 
     shell.setLayout(formLayout);
-    shell.setText(BaseMessages.getString(PKG, "JdbcMetaData.Shell.Title")); 
+    shell.setText(BaseMessages.getString(PKG, "JdbcMetaData.Shell.Title"));
 
     // Stepname line
     wlStepname = new Label(shell, SWT.RIGHT);
-    wlStepname.setText(BaseMessages.getString(PKG, "System.Label.StepName")); 
+    wlStepname.setText(BaseMessages.getString(PKG, "System.Label.StepName"));
     props.setLook(wlStepname);
     fdlStepname = new FormData();
     fdlStepname.left = new FormAttachment(0, 0);
@@ -461,7 +466,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     alwaysPassInputRowButtonFormData.right = new FormAttachment(100, 0);
     alwaysPassInputRowButtonFormData.top = new FormAttachment(lastControl, margin);
     alwaysPassInputRowButton.setLayoutData(alwaysPassInputRowButtonFormData);
-    
+
     lastControl = alwaysPassInputRowButton;
 
     //
@@ -512,7 +517,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     connectionSourceCombo.setEditable(false);
     connectionSourceCombo.addSelectionListener(new SelectionListener(){
       @Override
-      public void widgetDefaultSelected(SelectionEvent selectionEvent) {	
+      public void widgetDefaultSelected(SelectionEvent selectionEvent) {
       }
       @Override
       public void widgetSelected(SelectionEvent selectionEvent) {
@@ -523,7 +528,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     // Connection line
     connectionCombo = addConnectionLine(connectionComposite, lastControl, middle, margin );
-/*    
+/*
       if (meta.getDatabaseMeta() == null && transMeta.nrDatabases() == 1 ) {
         connectionCombo.select( 0 );
       }
@@ -556,8 +561,8 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     //jdbc driver field
     Label jdbcDriverLabel = new Label(connectionComposite, SWT.RIGHT);
-    jdbcDriverLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.driverField.Label")); 
-    jdbcDriverLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.driverField.Tooltip")); 
+    jdbcDriverLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.driverField.Label"));
+    jdbcDriverLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.driverField.Tooltip"));
     props.setLook(jdbcDriverLabel);
     FormData jdbcDriverLabelFormData = new FormData();
     jdbcDriverLabelFormData.left = new FormAttachment(0, 0);
@@ -578,8 +583,8 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     //jdbc url field
     Label jdbcUrlLabel = new Label(connectionComposite, SWT.RIGHT);
-    jdbcUrlLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.urlField.Label")); 
-    jdbcUrlLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.urlField.Tooltip")); 
+    jdbcUrlLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.urlField.Label"));
+    jdbcUrlLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.urlField.Tooltip"));
     props.setLook(jdbcUrlLabel);
     FormData jdbcUrlLabelFormData = new FormData();
     jdbcUrlLabelFormData.left = new FormAttachment(0, 0);
@@ -600,8 +605,8 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     //jdbc user field
     Label jdbcUserLabel = new Label(connectionComposite, SWT.RIGHT);
-    jdbcUserLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.userField.Label")); 
-    jdbcUserLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.userField.Tooltip")); 
+    jdbcUserLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.userField.Label"));
+    jdbcUserLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.userField.Tooltip"));
     props.setLook(jdbcUserLabel);
     FormData jdbcUserLabelFormData = new FormData();
     jdbcUserLabelFormData.left = new FormAttachment(0, 0);
@@ -622,8 +627,8 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     //jdbc password field
     Label jdbcPasswordLabel = new Label(connectionComposite, SWT.RIGHT);
-    jdbcPasswordLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.passwordField.Label")); 
-    jdbcPasswordLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.passwordField.Tooltip")); 
+    jdbcPasswordLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.passwordField.Label"));
+    jdbcPasswordLabel.setToolTipText(BaseMessages.getString(PKG, "JdbcMetadata.passwordField.Tooltip"));
     props.setLook(jdbcPasswordLabel);
     FormData jdbcPasswordLabelFormData = new FormData();
     jdbcPasswordLabelFormData.left = new FormAttachment(0, 0);
@@ -656,7 +661,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     CTabItem metadataTab = new CTabItem( cTabFolder, SWT.NONE );
     metadataTab.setText(BaseMessages.getString( PKG, "JdbcMetadata.MetaDataTab.Label" ) );
     metadataTab.setToolTipText(BaseMessages.getString( PKG, "JdbcMetadata.MetaDataTab.Tooltip"));
-    
+
     FormLayout metadataTabLayout = new FormLayout();
     connectionTabLayout.marginWidth = Const.FORM_MARGIN;
     connectionTabLayout.marginHeight = Const.FORM_MARGIN;
@@ -693,7 +698,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
       methodName = (String)methodDescriptor[0];
       methodCombo.add(BaseMessages.getString(PKG, "JdbcMetadata.methods." + methodName));
     }
-    
+
     SelectionListener methodComboSelectionListener = new SelectionListener(){
       @Override
       public void widgetDefaultSelected(SelectionEvent selectionEvent) {
@@ -705,7 +710,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
         methodUpdated();
         populateFieldsTable();
       }
-      
+
     };
     methodCombo.addSelectionListener(methodComboSelectionListener);
     lastControl = methodCombo;
@@ -745,12 +750,12 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
           comboVar.setItems(items);
         }
       }
-      
+
     };
     argumentSourceFields.addSelectionListener(argumentSourceFieldsSelectionListener);
 
     lastControl = argumentSourceFields;
-    
+
     //remove arguments
     removeArgumentFieldsLabel = new Label(metadataComposite, SWT.RIGHT);
     removeArgumentFieldsLabel.setText(BaseMessages.getString(PKG, "JdbcMetadata.removeArgumentFields.Label"));
@@ -802,7 +807,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     outputFieldsTableViewLabelFormData.left = new FormAttachment( 0, 0 );
     outputFieldsTableViewLabelFormData.top = new FormAttachment( 0, margin );
     outputFieldsTableViewLabel.setLayoutData(outputFieldsTableViewLabelFormData);
-    
+
     ColumnInfo[] columnInfo = new ColumnInfo[]{
       new ColumnInfo(
         BaseMessages.getString(PKG, "JdbcMetadata.FieldName.Label"),
@@ -814,8 +819,8 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
       )
     };
     outputFieldsTableView = new TableView(
-      transMeta, 
-      fieldsComposite, 
+      transMeta,
+      fieldsComposite,
       SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL,
       columnInfo, 10, lsMod, props
     );
@@ -837,7 +842,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
       public void widgetSelected(SelectionEvent arg0) {
         populateFieldsTable();
       }
-      
+
     });
 
     FormData outputFieldsTableViewFormData = new FormData();
@@ -846,7 +851,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     outputFieldsTableViewFormData.right = new FormAttachment(getFieldsButton, -margin );
     outputFieldsTableViewFormData.bottom = new FormAttachment( 100, -2*margin );
     outputFieldsTableView.setLayoutData(outputFieldsTableViewFormData);
-    
+
     //layout the fields tab
     FormData fieldsTabFormData = new FormData();
     fieldsTabFormData.left = new FormAttachment( 0, 0 );
@@ -859,9 +864,9 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     // OK and cancel buttons
     wOK = new Button(shell, SWT.PUSH);
-    wOK.setText(BaseMessages.getString(PKG, "System.Button.OK")); 
+    wOK.setText(BaseMessages.getString(PKG, "System.Button.OK"));
     wCancel = new Button(shell, SWT.PUSH);
-    wCancel.setText(BaseMessages.getString(PKG, "System.Button.Cancel")); 
+    wCancel.setText(BaseMessages.getString(PKG, "System.Button.Cancel"));
 
     BaseStepDialog.positionBottomButtons(shell, new Button[] { wOK, wCancel }, margin, null);
 
@@ -871,7 +876,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     cTabFolderFormData.top = new FormAttachment(alwaysPassInputRowButton, margin );
     cTabFolderFormData.right = new FormAttachment( 100, 0 );
     cTabFolderFormData.bottom = new FormAttachment( wOK, -margin );
-    cTabFolder.setLayoutData(cTabFolderFormData);	    
+    cTabFolder.setLayoutData(cTabFolderFormData);
     cTabFolder.setSelection( 0 );
 
     // Add listeners for cancel and OK
@@ -906,10 +911,10 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     // populate the dialog with the values from the meta object
     populateDialog();
 
-    // restore the changed flag to original value, as the modify listeners fire during dialog population 
+    // restore the changed flag to original value, as the modify listeners fire during dialog population
     meta.setChanged(changed);
 
-    // open dialog and enter event loop 
+    // open dialog and enter event loop
     shell.open();
     while (!shell.isDisposed()) {
       if (!display.readAndDispatch()) display.sleep();
@@ -925,14 +930,14 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     connectionSourceCombo.select(index);
     connectionSourceUpdated();
   }
-  
+
   private void setMethod(String method) {
     int index = JdbcMetaDataMeta.getMethodDescriptorIndex(method);
     if (index == -1) throw new IllegalArgumentException("Index for method " + method + " is -1.");
     methodCombo.select(index);
     logDebug("setMethod called, calling parameterless methodupdated");
   }
-  
+
   /**
    * This helper method puts the step configuration stored in the meta object
    * and puts it into the dialog controls.
@@ -954,7 +959,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     if (value != null) jdbcDriverField.setText(value);
 
     value = meta.getJdbcUrlField();
-    if (value != null) jdbcUrlField.setText(value);	
+    if (value != null) jdbcUrlField.setText(value);
 
     value = meta.getJdbcUserField();
     if (value != null) jdbcUserField.setText(value);
@@ -966,7 +971,7 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
 
     value = meta.getMethodName();
     if (value != null) setMethod(value);
-    
+
     argumentSourceFields.setSelection(meta.getArgumentSourceFields());
     methodUpdated(meta.getArguments());
 
@@ -977,10 +982,10 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
   }
 
   /**
-   * Called when the user cancels the dialog.  
+   * Called when the user cancels the dialog.
    */
   private void cancel() {
-    // The "stepname" variable will be the return value for the open() method. 
+    // The "stepname" variable will be the return value for the open() method.
     // Setting to null to indicate that dialog was cancelled.
     stepname = null;
     // Restoring original "changed" flag on the met aobject
@@ -988,14 +993,14 @@ public class JdbcMetaDataDialog extends BaseStepDialog implements StepDialogInte
     // close the SWT dialog window
     dispose();
   }
-  
+
   /**
    * Called when the user confirms the dialog
    */
   private void ok() {
-    // The "stepname" variable will be the return value for the open() method. 
+    // The "stepname" variable will be the return value for the open() method.
     // Setting to step name from the dialog control
-    stepname = wStepname.getText(); 
+    stepname = wStepname.getText();
     // Save settings to the meta object
     meta.setConnectionSource(JdbcMetaDataMeta.connectionSourceOptions[connectionSourceCombo.getSelectionIndex()]);
     meta.setConnectionName(connectionCombo.getText());

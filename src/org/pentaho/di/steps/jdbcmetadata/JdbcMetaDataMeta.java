@@ -56,32 +56,32 @@ import org.w3c.dom.Node;
 
 /**
  * This class is part of the demo step plug-in implementation.
- * It demonstrates the basics of developing a plug-in step for PDI. 
- * 
+ * It demonstrates the basics of developing a plug-in step for PDI.
+ *
  * The demo step adds a new string field to the row stream and sets its
  * value to "Hello World!". The user may select the name of the new field.
- *   
+ *
  * This class is the implementation of StepMetaInterface.
  * Classes implementing this interface need to:
- * 
+ *
  * - keep track of the step settings
  * - serialize step settings both to xml and a repository
  * - provide new instances of objects implementing StepDialogInterface, StepInterface and StepDataInterface
  * - report on how the step modifies the meta-data of the row-stream (row structure and field types)
- * - perform a sanity-check on the settings provided by the user 
- * 
+ * - perform a sanity-check on the settings provided by the user
+ *
  */
 public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface {
-  
+
   public static Class<DatabaseMetaData> DatabaseMetaDataClass;
-  
+
   private final static Map<Integer, String> OPTIONS_SCOPE = new HashMap<Integer, String>();
   static {
     OPTIONS_SCOPE.put(DatabaseMetaData.bestRowSession, "bestRowSession");
     OPTIONS_SCOPE.put(DatabaseMetaData.bestRowTemporary, "bestRowTemporary");
     OPTIONS_SCOPE.put(DatabaseMetaData.bestRowTransaction, "bestRowTransaction");
   }
-  
+
   //following list of COL_ static members represent columns of metadata result sets
   private final static ValueMeta COL_TABLE_CAT = new ValueMeta("TABLE_CAT", ValueMetaInterface.TYPE_STRING);
   private final static ValueMeta COL_PKTABLE_CAT = new ValueMeta("PKTABLE_CAT", ValueMetaInterface.TYPE_STRING);
@@ -126,7 +126,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   private final static ValueMeta COL_SOURCE_DATA_TYPE = new ValueMeta("SOURCE_DATA_TYPE", ValueMetaInterface.TYPE_INTEGER);
   private final static ValueMeta COL_NUM_PREC_RADIX = new ValueMeta("NUM_PREC_RADIX", ValueMetaInterface.TYPE_INTEGER);
   private final static ValueMeta COL_REMARKS = new ValueMeta("REMARKS", ValueMetaInterface.TYPE_STRING);
-  private final static ValueMeta COL_TYPE_CAT = new ValueMeta("TYPE_CAT", ValueMetaInterface.TYPE_STRING); 
+  private final static ValueMeta COL_TYPE_CAT = new ValueMeta("TYPE_CAT", ValueMetaInterface.TYPE_STRING);
   private final static ValueMeta COL_TYPE_SCHEM = new ValueMeta("TYPE_SCHEM", ValueMetaInterface.TYPE_STRING);
   private final static ValueMeta COL_SELF_REFERENCING_COL_NAME = new ValueMeta("SELF_REFERENCING_COL_NAME", ValueMetaInterface.TYPE_STRING);
   private final static ValueMeta COL_REF_GENERATION = new ValueMeta("REF_GENERATION", ValueMetaInterface.TYPE_STRING);
@@ -164,7 +164,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   private final static Object[] ARG_FOREIGN_CATALOG = new Object[]{"foreignCatalog", String.class};
   private final static Object[] ARG_FOREIGN_SCHEMA = new Object[]{"foreignSchema", String.class};
   private final static Object[] ARG_FOREIGN_TABLE = new Object[]{"foreignTable", String.class};
-  
+
   //this is a map of the methods we can get metadata from.
   //1) name of the java.sql.DatabaseMetaData method
   //2) array of argument descriptors
@@ -172,142 +172,142 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   //4) initially empty slot where the actual Method object is lazily stored.
   public final static Object[] methodDescriptors = new Object[]{
     new Object[]{
-      "getCatalogs", 
-      new Object[]{}, 
+      "getCatalogs",
+      new Object[]{},
       new ValueMetaInterface[]{COL_TABLE_CAT},
       null
     },
     new Object[]{
-      "getBestRowIdentifier", 
+      "getBestRowIdentifier",
       new Object[]{ARG_CATALOG, ARG_SCHEMA, ARG_TABLE, ARG_SCOPE, ARG_NULLABLE},
       new ValueMetaInterface[]{
-        COL_SCOPE, COL_COLUMN_NAME, COL_DATA_TYPE, COL_TYPE_NAME, 
+        COL_SCOPE, COL_COLUMN_NAME, COL_DATA_TYPE, COL_TYPE_NAME,
         COL_COLUMN_SIZE, COL_BUFFER_LENGTH, COL_DECIMAL_DIGITS, COL_PSEUDO_COLUMN
       },
       null
     },
     new Object[]{
-      "getColumnPrivileges", 
+      "getColumnPrivileges",
       new Object[]{ARG_CATALOG, ARG_SCHEMA, ARG_TABLE, ARG_COLUMN_NAME_PATTERN},
       new ValueMetaInterface[]{
-        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, COL_COLUMN_NAME, 
+        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, COL_COLUMN_NAME,
         COL_GRANTOR, COL_GRANTEE, COL_PRIVILEGE, COL_IS_GRANTABLE
       },
       null
     },
     new Object[]{
-      "getColumns", 
+      "getColumns",
       new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN, ARG_TABLE_NAME_PATTERN, ARG_COLUMN_NAME_PATTERN},
       new ValueMetaInterface[]{
-        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, COL_COLUMN_NAME, 
+        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, COL_COLUMN_NAME,
         COL_DATA_TYPE, COL_TYPE_NAME, COL_COLUMN_SIZE, COL_BUFFER_LENGTH, COL_DECIMAL_DIGITS, COL_NUM_PREC_RADIX,
         COL_NULLABLE, COL_REMARKS, COL_COLUMN_DEF, COL_SQL_DATA_TYPE, COL_SQL_DATETIME_SUB, COL_CHAR_OCTET_LENGTH,
-        COL_ORDINAL_POSITION, COL_IS_NULLABLE, 
-        COL_SCOPE_CATALOG, COL_SCOPE_SCHEMA, COL_SCOPE_TABLE, 
+        COL_ORDINAL_POSITION, COL_IS_NULLABLE,
+        COL_SCOPE_CATALOG, COL_SCOPE_SCHEMA, COL_SCOPE_TABLE,
         COL_SOURCE_DATA_TYPE, COL_IS_AUTOINCREMENT, COL_IS_GENERATEDCOLUMN
       },
       null
     },
     new Object[]{
-      "getCrossReference", 
+      "getCrossReference",
       new Object[]{
         ARG_PARENT_CATALOG, ARG_PARENT_SCHEMA, ARG_PARENT_TABLE,
         ARG_FOREIGN_CATALOG, ARG_FOREIGN_SCHEMA, ARG_FOREIGN_TABLE,
       },
       new ValueMetaInterface[]{
-        COL_PKTABLE_CAT, COL_PKTABLE_SCHEM, COL_PKTABLE_NAME, COL_PKCOLUMN_NAME, 
-        COL_FKTABLE_CAT, COL_FKTABLE_SCHEM, COL_FKTABLE_NAME, COL_FKCOLUMN_NAME, 
+        COL_PKTABLE_CAT, COL_PKTABLE_SCHEM, COL_PKTABLE_NAME, COL_PKCOLUMN_NAME,
+        COL_FKTABLE_CAT, COL_FKTABLE_SCHEM, COL_FKTABLE_NAME, COL_FKCOLUMN_NAME,
         COL_KEY_SEQ, COL_UPDATE_RULE, COL_DELETE_RULE, COL_FK_NAME, COL_PK_NAME, COL_DEFERRABILITY
       },
       null
     },
     new Object[]{
-      "getExportedKeys", 
+      "getExportedKeys",
       new Object[]{ARG_CATALOG, ARG_SCHEMA, ARG_TABLE},
       new ValueMetaInterface[]{
-        COL_PKTABLE_CAT, COL_PKTABLE_SCHEM, COL_PKTABLE_NAME, COL_PKCOLUMN_NAME, 
-        COL_FKTABLE_CAT, COL_FKTABLE_SCHEM, COL_FKTABLE_NAME, COL_FKCOLUMN_NAME, 
+        COL_PKTABLE_CAT, COL_PKTABLE_SCHEM, COL_PKTABLE_NAME, COL_PKCOLUMN_NAME,
+        COL_FKTABLE_CAT, COL_FKTABLE_SCHEM, COL_FKTABLE_NAME, COL_FKCOLUMN_NAME,
         COL_KEY_SEQ, COL_UPDATE_RULE, COL_DELETE_RULE, COL_FK_NAME, COL_PK_NAME, COL_DEFERRABILITY
       },
       null
     },
     new Object[]{
-      "getImportedKeys", 
+      "getImportedKeys",
       new Object[]{ARG_CATALOG, ARG_SCHEMA, ARG_TABLE},
       new ValueMetaInterface[]{
-        COL_PKTABLE_CAT, COL_PKTABLE_SCHEM, COL_PKTABLE_NAME, COL_PKCOLUMN_NAME, 
-        COL_FKTABLE_CAT, COL_FKTABLE_SCHEM, COL_FKTABLE_NAME, COL_FKCOLUMN_NAME, 
+        COL_PKTABLE_CAT, COL_PKTABLE_SCHEM, COL_PKTABLE_NAME, COL_PKCOLUMN_NAME,
+        COL_FKTABLE_CAT, COL_FKTABLE_SCHEM, COL_FKTABLE_NAME, COL_FKCOLUMN_NAME,
         COL_KEY_SEQ, COL_UPDATE_RULE, COL_DELETE_RULE, COL_FK_NAME, COL_PK_NAME, COL_DEFERRABILITY
       },
       null
     },
     new Object[]{
-      "getPrimaryKeys", 
+      "getPrimaryKeys",
       new Object[]{ARG_CATALOG, ARG_SCHEMA, ARG_TABLE},
       new ValueMetaInterface[]{COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, COL_COLUMN_NAME,COL_KEY_SEQ, COL_PK_NAME},
       null
     },
     new Object[]{
-      "getSchemas", 
-      new Object[]{}, 
+      "getSchemas",
+      new Object[]{},
       new ValueMetaInterface[]{COL_TABLE_SCHEM, COL_TABLE_CATALOG},
       null
     },
     /*  We'd love to use this version of getSchemas, but we found that calling it throws AbstractMethodError in h2 and sqlite (possibly others)
     new Object[]{
-      "getSchemas", 
-      new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN}, 
+      "getSchemas",
+      new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN},
       new ValueMetaInterface[]{COL_TABLE_SCHEM, COL_TABLE_CATALOG},
       null
     },
     */
     new Object[]{
-      "getTablePrivileges", 
+      "getTablePrivileges",
       new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN, ARG_TABLE_NAME_PATTERN},
       new ValueMetaInterface[]{
-        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, 
+        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME,
         COL_GRANTOR, COL_GRANTEE, COL_PRIVILEGE, COL_IS_GRANTABLE
       },
       null
     },
     new Object[]{
-      "getTableTypes", 
-      new Object[]{}, 
+      "getTableTypes",
+      new Object[]{},
       new ValueMetaInterface[]{COL_TABLE_TYPE},
       null
     },
     new Object[]{
-      "getTables", 
-      new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN, ARG_TABLE_NAME_PATTERN, ARG_TABLE_TYPES}, 
+      "getTables",
+      new Object[]{ARG_CATALOG, ARG_SCHEMA_PATTERN, ARG_TABLE_NAME_PATTERN, ARG_TABLE_TYPES},
       new ValueMetaInterface[]{
-        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, COL_TABLE_TYPE, COL_REMARKS, 
+        COL_TABLE_CAT, COL_TABLE_SCHEM, COL_TABLE_NAME, COL_TABLE_TYPE, COL_REMARKS,
         COL_TYPE_CAT, COL_TYPE_SCHEM, COL_TYPE_NAME, COL_SELF_REFERENCING_COL_NAME,
         COL_REF_GENERATION
       },
       null
     },
     new Object[]{
-      "getTypeInfo", 
-      new Object[]{}, 
+      "getTypeInfo",
+      new Object[]{},
       new ValueMetaInterface[]{
-        COL_TYPE_NAME, COL_DATA_TYPE, COL_PRECISION, COL_LITERAL_PREFIX, COL_LITERAL_SUFFIX, 
-        COL_CREATE_PARAMS, COL_NULLABLE, COL_CASE_SENSITIVE, COL_SEARCHABLE, COL_UNSIGNED_ATTRIBUTE, 
-        COL_FIXED_PREC_SCALE, COL_AUTO_INCREMENT, COL_LOCAL_TYPE_NAME, 
+        COL_TYPE_NAME, COL_DATA_TYPE, COL_PRECISION, COL_LITERAL_PREFIX, COL_LITERAL_SUFFIX,
+        COL_CREATE_PARAMS, COL_NULLABLE, COL_CASE_SENSITIVE, COL_SEARCHABLE, COL_UNSIGNED_ATTRIBUTE,
+        COL_FIXED_PREC_SCALE, COL_AUTO_INCREMENT, COL_LOCAL_TYPE_NAME,
         COL_MINIMUM_SCALE, COL_MAXIMUM_SCALE, COL_SQL_DATA_TYPE, COL_SQL_DATETIME_SUB, COL_NUM_PREC_RADIX
       },
       null
     },
     new Object[]{
-      "getVersionColumns", 
+      "getVersionColumns",
       new Object[]{ARG_CATALOG, ARG_SCHEMA, ARG_TABLE},
       new ValueMetaInterface[]{
-        COL_SCOPE, COL_COLUMN_NAME, COL_DATA_TYPE, COL_TYPE_NAME, 
+        COL_SCOPE, COL_COLUMN_NAME, COL_DATA_TYPE, COL_TYPE_NAME,
         COL_COLUMN_SIZE, COL_BUFFER_LENGTH, COL_DECIMAL_DIGITS, COL_PSEUDO_COLUMN
       },
       null
     }
   };
-  
+
   private final static String CONNECTION_SOURCE = "connectionSource";
   private final static String CONNECTION_NAME = "connectionName";
   private final static String CONNECTION_FIELD = "connectionField";
@@ -328,8 +328,8 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
 
   /**
    *  The PKG member is used when looking up internationalized strings.
-   *  The properties file with localized keys is expected to reside in 
-   *  {the package of the class specified}/messages/messages_{locale}.properties   
+   *  The properties file with localized keys is expected to reside in
+   *  {the package of the class specified}/messages/messages_{locale}.properties
    */
   private static Class<?> PKG = JdbcMetaDataMeta.class; // for i18n purposes
 
@@ -339,12 +339,12 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   public static final String connectionSourceOptionJDBCFields= "JDBCFields";
 
   public static final String[] connectionSourceOptions = new String[]{
-    connectionSourceOptionConnection, 
-    connectionSourceOptionConnectionField, 
-    connectionSourceOptionJDBC, 
+    connectionSourceOptionConnection,
+    connectionSourceOptionConnectionField,
+    connectionSourceOptionJDBC,
     connectionSourceOptionJDBCFields
   };
-  
+
   /**
    * Constructor should call super() to make sure the base class has a chance to initialize properly.
    */
@@ -364,27 +364,27 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   /**
    * Called by Spoon to get a new instance of the SWT dialog for the step.
    * A standard implementation passing the arguments to the constructor of the step dialog is recommended.
-   * 
+   *
    * @param shell an SWT Shell
-   * @param meta  description of the step 
-   * @param transMeta	description of the the transformation 
+   * @param meta  description of the step
+   * @param transMeta description of the the transformation
    * @param name the name of the step
-   * @return  new instance of a dialog for this step 
+   * @return  new instance of a dialog for this step
    */
   public StepDialogInterface getDialog(Shell shell, StepMetaInterface meta, TransMeta transMeta, String name) {
     return new JdbcMetaDataDialog(shell, meta, transMeta, name);
   }
 
   /**
-   * Called by PDI to get a new instance of the step implementation. 
+   * Called by PDI to get a new instance of the step implementation.
    * A standard implementation passing the arguments to the constructor of the step class is recommended.
-   * 
+   *
    * @param stepMeta description of the step
    * @param stepDataInterface instance of a step data class
    * @param cnr copy number
    * @param transMeta description of the transformation
    * @param disp runtime implementation of the transformation
-   * @return the new instance of a step implementation 
+   * @return the new instance of a step implementation
    */
   public StepInterface getStep(StepMeta stepMeta, StepDataInterface stepDataInterface, int cnr, TransMeta transMeta, Trans disp) {
     return new JdbcMetaData(stepMeta, stepDataInterface, cnr, transMeta, disp);
@@ -399,7 +399,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
 
   /**
    * This method is called every time a new step is created and should allocate/set the step configuration
-   * to sensible defaults. The values set here will be used by Spoon when a new step is created.    
+   * to sensible defaults. The values set here will be used by Spoon when a new step is created.
    */
   public void setDefault() {
     connectionSource = "Connection";
@@ -413,7 +413,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * Stores the connectionsource. 
+   * Stores the connectionsource.
    */
   private String connectionSource;
   /**
@@ -448,7 +448,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * Stores the name of connection. 
+   * Stores the name of connection.
    */
   private String connectionName;
   /**
@@ -467,7 +467,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * Stores the name of field holding the connection name. 
+   * Stores the name of field holding the connection name.
    */
   private String connectionField;
   /**
@@ -485,7 +485,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     this.connectionField = connectionField;
   }
   /**
-   * Stores the name of the field containing the name of the jdbc driver. 
+   * Stores the name of the field containing the name of the jdbc driver.
    */
   private String jdbcDriverField;
   /**
@@ -504,7 +504,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * Stores the name of the field containing the url for the jdbc connection. 
+   * Stores the name of the field containing the url for the jdbc connection.
    */
   private String jdbcUrlField;
   /**
@@ -523,7 +523,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * Stores the name of the field containing the username for the jdbc connection. 
+   * Stores the name of the field containing the username for the jdbc connection.
    */
   private String jdbcUserField;
   /**
@@ -542,7 +542,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * Stores the name of the field containing the password for the jdbc connection. 
+   * Stores the name of the field containing the password for the jdbc connection.
    */
   private String jdbcPasswordField;
   /**
@@ -630,7 +630,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
     }
     return -1;
   }
-  
+
   public static String getMethodName(int methodDescriptorIndex) {
     Object[] methodDescriptor = (Object[])JdbcMetaDataMeta.methodDescriptors[methodDescriptorIndex];
     String methodName = (String)methodDescriptor[0];
@@ -715,7 +715,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   public void setArguments(String[] arguments) {
     this.arguments = arguments;
   }
-  
+
   /**
    * Stores the selection of fields that are added to the stream
    */
@@ -737,10 +737,10 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
    * This method is used when a step is duplicated in Spoon. It needs to return a deep copy of this
    * step meta object. Be sure to create proper deep copies if the step configuration is stored in
    * modifiable objects.
-   * 
+   *
    * See org.pentaho.di.trans.steps.rowgenerator.RowGeneratorMeta.clone() for an example on creating
    * a deep copy.
-   * 
+   *
    * @return a deep copy of this
    */
   public Object clone() {
@@ -750,13 +750,13 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
 
   /**
    * This method is called by Spoon when a step needs to serialize its configuration to XML. The expected
-   * return value is an XML fragment consisting of one or more XML tags.  
-   * 
+   * return value is an XML fragment consisting of one or more XML tags.
+   *
    * Please use org.pentaho.di.core.xml.XMLHandler to conveniently generate the XML.
-   * 
+   *
    * @return a string containing the XML serialization of this step
    */
-  public String getXML() throws KettleValueException {		
+  public String getXML() throws KettleValueException {
     // only one field to serialize
     StringBuilder xml = new StringBuilder();
     String indent = "    ";
@@ -816,13 +816,13 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
 
   /**
    * This method is called by PDI when a step needs to load its configuration from XML.
-   * 
+   *
    * Please use org.pentaho.di.core.xml.XMLHandler to conveniently read from the
    * XML node passed in.
-   * 
-   * @param stepnode	the XML node containing the configuration
-   * @param databases	the databases available in the transformation
-   * @param counters	the counters available in the transformation
+   *
+   * @param stepnode  the XML node containing the configuration
+   * @param databases the databases available in the transformation
+   * @param counters  the counters available in the transformation
    */
   public void loadXML(Node stepnode, List<DatabaseMeta> databases, Map<String, Counter> counters) throws KettleXMLException {
     try {
@@ -847,7 +847,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
         arguments[i] = XMLHandler.getNodeValue(argumentNode);
       }
       setArguments(arguments);
-      
+
       Node outputFieldNodes = XMLHandler.getSubNode(stepnode, OUTPUT_FIELDS);
       n = XMLHandler.countNodes(outputFieldNodes, OUTPUT_FIELD);
       outputFields = new Object[n];
@@ -899,18 +899,18 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       }
     }
     catch(Exception e){
-      throw new KettleException("Unable to save step into repository: "+id_step, e); 
+      throw new KettleException("Unable to save step into repository: "+id_step, e);
     }
   }
 
   /**
    * This method is called by PDI when a step needs to read its configuration from a repository.
    * The repository implementation provides the necessary methods to read the step attributes.
-   * 
-   * @param rep		the repository to read from
-   * @param id_step	the id of the step being read
-   * @param databases	the databases available in the transformation
-   * @param counters	the counters available in the transformation
+   *
+   * @param rep   the repository to read from
+   * @param id_step the id of the step being read
+   * @param databases the databases available in the transformation
+   * @param counters  the counters available in the transformation
    */
   public void readRep(Repository rep, ObjectId id_step, List<DatabaseMeta> databases, Map<String, Counter> counters) throws KettleException {
     try{
@@ -932,7 +932,7 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       for (int i = 0; i < n; i++) {
         arguments[i] = rep.getStepAttributeString(id_step, i, ARGUMENT);
       }
-      
+
       n = rep.countNrStepAttributes(id_step, FIELD_NAME);
       outputFields = new Object[n];
       String[] outputField;
@@ -948,18 +948,18 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
       throw new KettleException("Unable to load step from repository", e);
     }
   }
-  
+
   /**
    * This method is called to determine the changes the step is making to the row-stream.
    * To that end a RowMetaInterface object is passed in, containing the row-stream structure as it is when entering
    * the step. This method must apply any changes the step makes to the row stream. Usually a step adds fields to the
    * row-stream.
-   * 
-   * @param r			the row structure coming in to the step
-   * @param origin	the name of the step making the changes
-   * @param info		row structures of any info steps coming in
-   * @param nextStep	the description of a step this step is passing rows to
-   * @param space		the variable space for resolving variables
+   *
+   * @param r     the row structure coming in to the step
+   * @param origin  the name of the step making the changes
+   * @param info    row structures of any info steps coming in
+   * @param nextStep  the description of a step this step is passing rows to
+   * @param space   the variable space for resolving variables
    */
   public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {
     //remove argument source fields coming from the input
@@ -975,23 +975,30 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
         }
       }
     }
-    
+
     //add the outputfields added by this step.
     Object[] outputFields = getOutputFields();
     String[] outputField;
     int n = outputFields.length;
-    
+
     Object[] methodDescriptor = getMethodDescriptor();
     ValueMetaInterface[] fields = (ValueMetaInterface[])methodDescriptor[2];
     int m = fields.length;
     ValueMetaInterface field;
-    
+    String fieldName;
+
     for (int i = 0; i < n; i++) {
       outputField = (String[])outputFields[i];
       for (int j = 0; j < m; j++) {
         field = fields[j];
-        if (!outputField[0].equals(field.getName())) continue;
-        field = new ValueMeta(outputField[1], field.getType());
+        fieldName = field.getName();
+        if (!fieldName.equals(outputField[0])) {
+          continue;
+        }
+        field = new ValueMeta(
+          outputField[1] == null ? fieldName : outputField[1],
+          field.getType()
+        );
         field.setOrigin(origin);
         r.addValueMeta(field);
         break;
@@ -1000,10 +1007,10 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
   }
 
   /**
-   * This method is called when the user selects the "Verify Transformation" option in Spoon. 
+   * This method is called when the user selects the "Verify Transformation" option in Spoon.
    * A list of remarks is passed in that this method should add to. Each remark is a comment, warning, error, or ok.
    * The method should perform as many checks as necessary to catch design-time errors.
-   * 
+   *
    * Typical checks include:
    * - verify that all mandatory configuration is given
    * - verify that the step receives any input, unless it's a row generating step
@@ -1016,15 +1023,15 @@ public class JdbcMetaDataMeta extends BaseStepMeta implements StepMetaInterface 
    *   @param prev the structure of the incoming row-stream
    *   @param input names of steps sending input to the step
    *   @param output names of steps this step is sending output to
-   *   @param info fields coming in from info steps 
+   *   @param info fields coming in from info steps
    */
   public void check(
-    List<CheckResultInterface> remarks, 
-    TransMeta transmeta, 
-    StepMeta stepMeta, 
-    RowMetaInterface prev, 
-    String input[], 
-    String output[], 
+    List<CheckResultInterface> remarks,
+    TransMeta transmeta,
+    StepMeta stepMeta,
+    RowMetaInterface prev,
+    String input[],
+    String output[],
     RowMetaInterface info
   ) {
     CheckResult cr;

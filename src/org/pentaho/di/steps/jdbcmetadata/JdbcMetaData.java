@@ -51,31 +51,31 @@ import java.util.Map.Entry;
 
 /**
  * This class is part of the demo step plug-in implementation.
- * It demonstrates the basics of developing a plug-in step for PDI. 
- * 
+ * It demonstrates the basics of developing a plug-in step for PDI.
+ *
  * The demo step adds a new string field to the row stream and sets its
  * value to "Hello World!". The user may select the name of the new field.
- *   
+ *
  * This class is the implementation of StepInterface.
  * Classes implementing this interface need to:
- * 
+ *
  * - initialize the step
  * - execute the row processing logic
- * - dispose of the step 
- * 
+ * - dispose of the step
+ *
  * Please do not create any local fields in a StepInterface class. Store any
  * information related to the processing logic in the supplied step data interface
- * instead.  
- * 
+ * instead.
+ *
  */
 
 public class JdbcMetaData extends BaseStep implements StepInterface {
 
   /**
    * The constructor should simply pass on its arguments to the parent class.
-   * 
+   *
    * @param s step description
-   * @param stepDataInterface	step data class
+   * @param stepDataInterface step data class
    * @param c step copy
    * @param t transformation description
    * @param dis transformation executing
@@ -110,7 +110,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     if (type == String.class) {
       argument = (String)stringValue;
     }
-    else 
+    else
     if (type == Boolean.class) {
       argument = "Y".equals(stringValue) ? Boolean.TRUE : Boolean.FALSE;
     }
@@ -124,7 +124,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     return argument;
   }
   /**
-   * Some method arguments are passed as arrays. 
+   * Some method arguments are passed as arrays.
    * In Kettle, users represent this as a comma-separated list of values
    * This method converts from the user value to the actual argument
    * @return
@@ -139,7 +139,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     }
     return result;
   }
-  
+
   /**
    * Utility to get the kettle named database connection
    * @param connectionName The name of the kettle connection
@@ -183,7 +183,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     String stringArgument;
     if (meta.getArgumentSourceFields()) {
       //arguments are specified by values coming from fields.
-      //we don't know about the fields yet, so we 
+      //we don't know about the fields yet, so we
       //initialize with bogus value so we can check if all fields were found
       logDebug("Allocating fieldindices array for arguments.");
       data.argumentFieldIndices = new int[argc];
@@ -213,7 +213,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
             }
           }
           else {
-            argument = stringToArgumentValue(stringArgument, argumentType);        
+            argument = stringToArgumentValue(stringArgument, argumentType);
           }
         }
         data.arguments[i] = argument;
@@ -285,14 +285,16 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     Object[] outputFields = meta.getOutputFields();
     int n = outputFields.length;
     data.resultSetIndices = new int[n];
-    
+
     ValueMetaInterface[] fields = meta.getMethodResultSetDescriptor();
     int m = fields.length;
-    
+
     for (int i = 0; i < n; i++) {
       String[] outputField = (String[])outputFields[i];
       String fieldName = outputField[0];
-      
+      if (fieldName == null) {
+        continue;
+      }
       for (int j = 0; j < m; j++) {
         ValueMetaInterface field = fields[j];
         if (!fieldName.equals(field.getName())) continue;
@@ -303,23 +305,23 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
   }
 
   /**
-   * This method is called by PDI during transformation startup. 
-   * 
-   * It should initialize required for step execution. 
-   * 
+   * This method is called by PDI during transformation startup.
+   *
+   * It should initialize required for step execution.
+   *
    * The meta and data implementations passed in can safely be cast
-   * to the step's respective implementations. 
-   * 
+   * to the step's respective implementations.
+   *
    * It is mandatory that super.init() is called to ensure correct behavior.
-   * 
+   *
    * Typical tasks executed here are establishing the connection to a database,
    * as wall as obtaining resources, like file handles.
-   * 
-   * @param smi 	step meta interface implementation, containing the step settings
-   * @param sdi	step data interface implementation, used to store runtime information
-   * 
-   * @return true if initialization completed successfully, false if there was an error preventing the step from working. 
-   *  
+   *
+   * @param smi   step meta interface implementation, containing the step settings
+   * @param sdi step data interface implementation, used to store runtime information
+   *
+   * @return true if initialization completed successfully, false if there was an error preventing the step from working.
+   *
    */
   public boolean init(StepMetaInterface smi, StepDataInterface sdi) {
     boolean result = true;
@@ -327,7 +329,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     JdbcMetaDataMeta meta = (JdbcMetaDataMeta) smi;
     JdbcMetaDataData data = (JdbcMetaDataData) sdi;
     if (!super.init(meta, data)) return false;
-    
+
     try {
       data.databases = new HashMap<String, Database>();
       data.connections = new HashMap<String[], Connection>();
@@ -338,6 +340,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     }
     catch(Exception exception) {
       logError("Unexpected " + exception.getClass().getName() +" initializing step: " + exception.getMessage());
+      exception.printStackTrace();
       result = false;
     }
     return result;
@@ -346,7 +349,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
   private String getConnectionNameFromRow(JdbcMetaDataData data, Object[] row){
     return (String)(row[data.connectionField]);
   }
-  
+
   private String getJdbcDriverFromRow(JdbcMetaDataData data, Object[] row) {
     return (String)(row[data.jdbcDriverField]);
   }
@@ -485,31 +488,31 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
    * Once the transformation starts executing, the processRow() method is called repeatedly
    * by PDI for as long as it returns true. To indicate that a step has finished processing rows
    * this method must call setOutputDone() and return false;
-   * 
+   *
    * Steps which process incoming rows typically call getRow() to read a single row from the
-   * input stream, change or add row content, call putRow() to pass the changed row on 
-   * and return true. If getRow() returns null, no more rows are expected to come in, 
+   * input stream, change or add row content, call putRow() to pass the changed row on
+   * and return true. If getRow() returns null, no more rows are expected to come in,
    * and the processRow() implementation calls setOutputDone() and returns false to
    * indicate that it is done too.
-   * 
+   *
    * Steps which generate rows typically construct a new row Object[] using a call to
    * RowDataUtil.allocateRowData(numberOfFields), add row content, and call putRow() to
    * pass the new row on. Above process may happen in a loop to generate multiple rows,
    * at the end of which processRow() would call setOutputDone() and return false;
-   * 
+   *
    * @param smi the step meta interface containing the step settings
    * @param sdi the step data interface that should be used to store
-   * 
+   *
    * @return true to indicate that the function should be called again, false if the step is done
    */
   public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {
 
-    // safely cast the step settings (meta) and runtime info (data) to specific implementations 
+    // safely cast the step settings (meta) and runtime info (data) to specific implementations
     JdbcMetaDataMeta meta = (JdbcMetaDataMeta) smi;
     JdbcMetaDataData data = (JdbcMetaDataData) sdi;
 
     // get incoming row, getRow() potentially blocks waiting for more rows, returns null if no more rows expected
-    Object[] r = getRow(); 
+    Object[] r = getRow();
 
     // if no more rows are expected, indicate step is finished and processRow() should not be called again
     if (r == null){
@@ -526,12 +529,12 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
       data.outputRowOffset = inputRowMeta.size();
       String connectionSource = meta.getConnectionSource();
       boolean argumentSourceFields = meta.getArgumentSourceFields();
-      //check if we need to use fields. 
+      //check if we need to use fields.
       //If so, store the indices so we can easily extract their values during transformation
       if (
         JdbcMetaDataMeta.connectionSourceOptionJDBCFields.equals(connectionSource)
       ||JdbcMetaDataMeta.connectionSourceOptionConnectionField.equals(connectionSource)
-      ||argumentSourceFields 
+      ||argumentSourceFields
       ) {
         logDebug("Looking up indices of input fields.");
         String fieldName;
@@ -582,17 +585,17 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
             }
           }
         } // end fields loop
-        
+
         //ensure that we have all required fields.
         if (
           (
             JdbcMetaDataMeta.connectionSourceOptionJDBCFields.equals(connectionSource) && (
-            data.jdbcDriverField == -1 || 
-            data.jdbcUrlField == -1 || 
-            data.jdbcUserField == -1 || 
+            data.jdbcDriverField == -1 ||
+            data.jdbcUrlField == -1 ||
+            data.jdbcUserField == -1 ||
             data.jdbcPasswordField == -1
           )) || (
-            JdbcMetaDataMeta.connectionSourceOptionConnectionField.equals(connectionSource) && 
+            JdbcMetaDataMeta.connectionSourceOptionConnectionField.equals(connectionSource) &&
             data.connectionField == -1
           )
         ) {
@@ -602,7 +605,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
         if (argumentSourceFields) {
           //keep track of how many fields we used as args.
           //We need this in case remove argument fields is enabled
-          //as this is the number of fields we need to discard from the input row. 
+          //as this is the number of fields we need to discard from the input row.
           int fieldsUsedAsArgs = 0;
           //ensure all argument fields are bound to a valid field
           argumentFields: for (int j = 0; j < argc; j++) {
@@ -624,7 +627,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
             }
             else {
               //this argument points to a valid field.
-              //let's check if this same field was already used as arg: 
+              //let's check if this same field was already used as arg:
               for (int i = 0; i < j; i++){
                 if (data.argumentFieldIndices[i] == data.argumentFieldIndices[j]) {
                   //yes, it was used already. Let's check the next argument.
@@ -635,16 +638,16 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
               fieldsUsedAsArgs++;
             }
           }
-          
+
           if (meta.getRemoveArgumentFields()) {
             int n = data.outputRowOffset;
             data.outputRowOffset -= fieldsUsedAsArgs;
             data.inputFieldsToCopy = new int[data.outputRowOffset];
-            
+
             inputFieldsToCopy: for (int i = 0, j = 0; i < n; i++) { //for each field in the input row
               for (int k = 0; k < argc; k++) {  //for each method argument
                 if (data.argumentFieldIndices[k] == i) {
-                  //this input field is used as argument. Continue to the next field. 
+                  //this input field is used as argument. Continue to the next field.
                   continue inputFieldsToCopy;
                 }
               }
@@ -655,13 +658,13 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
         }
         logDebug("Done looking up indices of input fields.");
       }
-      
+
       // clone the input row structure and place it in our data object
       data.outputRowMeta = (RowMetaInterface) inputRowMeta.clone();
-      // use meta.getFields() to change it, so it reflects the output row structure 
+      // use meta.getFields() to change it, so it reflects the output row structure
       meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
     } // end of first
-    
+
     try {
       logRowlevel("Processing 1 input row");
       Connection connection = getConnection(meta, data, r);
@@ -711,16 +714,16 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
           outputRows = true;
         }
         // put the row to the output row stream
-        putRow(data.outputRowMeta, outputRow); 
+        putRow(data.outputRowMeta, outputRow);
         logRowlevel("Done processing 1 output row.");
       }
       resultSet.close();
       if (!outputRows && meta.getAlwaysPassInputRow()) {
         Object[] outputRow = createOutputRow(meta, data, r);
-        putRow(data.outputRowMeta, outputRow); 
+        putRow(data.outputRowMeta, outputRow);
       }
       logRowlevel("Done processing 1 input row.");
-    } 
+    }
     catch (Exception exception) {
       exception.printStackTrace();
       if (exception instanceof KettleException) {
@@ -741,24 +744,24 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
   }
 
   /**
-   * This method is called by PDI once the step is done processing. 
-   * 
+   * This method is called by PDI once the step is done processing.
+   *
    * The dispose() method is the counterpart to init() and should release any resources
    * acquired for step execution like file handles or database connections.
-   * 
+   *
    * The meta and data implementations passed in can safely be cast
-   * to the step's respective implementations. 
-   * 
+   * to the step's respective implementations.
+   *
    * It is mandatory that super.dispose() is called to ensure correct behavior.
-   * 
-   * @param smi 	step meta interface implementation, containing the step settings
-   * @param sdi	step data interface implementation, used to store runtime information
+   *
+   * @param smi   step meta interface implementation, containing the step settings
+   * @param sdi step data interface implementation, used to store runtime information
    */
   public void dispose(StepMetaInterface smi, StepDataInterface sdi) {
     // Casting to step-specific implementation classes is safe
     JdbcMetaDataMeta meta = (JdbcMetaDataMeta) smi;
     JdbcMetaDataData data = (JdbcMetaDataData) sdi;
-    
+
     //clean up the database
     try {
       if (data.database != null) {
@@ -770,7 +773,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     catch (Exception ex){
       logError("Error cleaning up database: " + ex.getMessage());
     }
-    
+
     //clean up the connection
     try {
       if (data.connection != null && !data.connection.isClosed()) {
@@ -796,7 +799,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     }
     data.databases.clear();
     data.databases = null;
-      
+
     //clean up the connection map
     Iterator<Entry<String[], Connection>> connectionIterator = data.connections.entrySet().iterator();
     while (connectionIterator.hasNext()){
@@ -812,7 +815,7 @@ public class JdbcMetaData extends BaseStep implements StepInterface {
     }
     data.connections.clear();
     data.connections = null;
-    
+
     data.arguments = null;
     data.method = null;
     data.argumentFieldIndices = null;
