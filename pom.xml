@@ -43,6 +43,8 @@
                 <version>2.6</version>
                 <configuration>
                     <descriptor>src/assembly/asm.xml</descriptor>
+                    <finalName>pentaho-pdi-plugin-jdbc-metadata</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
                     <execution>
@@ -51,6 +53,25 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <property name="deploy.dir" value="${basedir}/dist/steps/pentaho-pdi-plugin-jdbc-metadata" />
+                                <mkdir dir="${deploy.dir}"/>
+                                <copy file="${project.build.directory}/pentaho-pdi-plugin-jdbc-metadata.zip" todir="${deploy.dir}"/>
+                            </target>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
